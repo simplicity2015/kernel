@@ -2,6 +2,7 @@
  * dwc3_otg.c - DesignWare USB3 DRD Controller OTG
  *
  * Copyright (c) 2012-2013, The Linux Foundation. All rights reserved.
+ * Copyright (C) 2015 XiaoMi, Inc.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -89,6 +90,17 @@ static int dwc3_otg_set_suspend(struct usb_phy *phy, int suspend)
 		pm_runtime_get_noresume(phy->dev);
 		pm_runtime_resume(phy->dev);
 	}
+
+	return 0;
+}
+
+static void dwc3_otg_set_hsphy_auto_suspend(struct dwc3_otg *dotg, bool susp);
+static int dwc3_otg_set_autosuspend(struct usb_phy *phy, int enable_autosuspend)
+{
+	struct usb_otg *otg = phy->otg;
+	struct dwc3_otg *dotg = container_of(otg, struct dwc3_otg, otg);
+
+	dwc3_otg_set_hsphy_auto_suspend(dotg, enable_autosuspend);
 
 	return 0;
 }
@@ -541,7 +553,7 @@ static int dwc3_otg_set_power(struct usb_phy *phy, unsigned mA)
 			dotg->charger->chg_type == DWC3_PROPRIETARY_CHARGER)
 		power_supply_type = POWER_SUPPLY_TYPE_USB_DCP;
 	else
-		power_supply_type = POWER_SUPPLY_TYPE_USB;
+		power_supply_type = POWER_SUPPLY_TYPE_UNKNOWN;
 
 	power_supply_set_supply_type(dotg->psy, power_supply_type);
 
@@ -998,6 +1010,7 @@ int dwc3_otg_init(struct dwc3 *dwc)
 	dotg->otg.phy->dev = dwc->dev;
 	dotg->otg.phy->set_power = dwc3_otg_set_power;
 	dotg->otg.phy->set_suspend = dwc3_otg_set_suspend;
+	dotg->otg.phy->set_phy_autosuspend = dwc3_otg_set_autosuspend;
 
 	ret = usb_set_transceiver(dotg->otg.phy);
 	if (ret) {

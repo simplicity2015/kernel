@@ -977,7 +977,7 @@ static int ft5x06_input_disable(struct input_dev *in_dev)
 	pr_info("ft5x06 disable!\n");
 	ft5x06_suspend(ft5x06);
 
-	return 0;
+	return 0;	
 }
 
 static int ft5x06_input_enable(struct input_dev *in_dev)
